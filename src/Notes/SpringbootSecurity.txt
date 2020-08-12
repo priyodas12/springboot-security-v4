@@ -1,0 +1,125 @@
+Springboot Security:
+
+1.dependency for spring-boot-security:
+
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+adding this dependency spring will do basic authentication through user/password-generated while application starts up.
+
+2.Filters will intercepts in background for spring security.
+
+	A. adds mandatory authentication for URLs.
+	B. adds login form 
+	C. handles login errors
+	D. create a default user and cretaes auto generated password.
+
+3.The Spring Boot security.* properties have been deprecated starting with Spring Boot 2.0.0-M4
+
+below not allowed:
+erver:
+  port: 9393
+
+spring:
+  output:
+    ansi:
+      enabled: always
+  security:
+    user:
+      name: abcd
+      password: abcd1234
+
+4.C:\Users\Priyo\IdeaProjects\springboot-security-v4\target>java -jar springboot-security-v4-0.0.1-SNAPSHOT.jar
+
+5.@EnableWebSecurity-> treat this class as web security configuration class.
+
+6.with and we can pass over the responsibilities, chain ofresponsibilities
+we will get AuthenticationManager from AuthenticationManagerBuilder by builder pattern.
+
+@EnableWebSecurity
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .withUser("abcd")
+                .password("abcd1234")
+                .roles("USER")
+				.and()
+                .withUser("defg")
+                .password("defg1234")
+                .roles("DEV");
+    }
+
+    @Bean
+    public PasswordEncoder getPasswordEncoder(){
+        return NoOpPasswordEncoder.getInstance();
+    }
+}
+
+7.typically filter can intercepts all request where as servlet can handle by specific request type(path or bean type)
+
+8.
+default filter by springboot.
+
+<filter>
+	<filter-name>springSecurityFilterChain</filter-name>
+	<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+</filter>
+
+<filter-mapping>
+	<filter-name>springSecurityFilterChain</filter-name>
+	<url-pattern>/*</url-pattern>
+</filter-mapping>
+
+9.
+
+    ---->credentails--->
+user				    -->Authentication(I)-->AuthenticationProvider(I)
+	<-----principal<----
+	
+	getCredentails();-->holds Credentials
+	getPrincipals():-->holds Principal
+	isAuthenticated();-->flag to indicate;
+	
+10.
+
+Authentication(I)-->instance holds credeantials before authentication and after it holds principal.
+
+11.Providers pattern:
+
+AuthenticationProvider(I) does actual authentication, having a method authenticate() does.
+
+there could be multiple AuthenticationProvider instance available;
+
+AuthenticationManager is common type,
+
+ProviderManager implements AuthenticationManager ,this will supply proper authenticate() by chain of responsbility(Oauth,LDAP,SSO) from AutneticationProvider;
+
+ProviderManager-->AuthnticationManager(select the actual supported provider by support method)-->AuthenticationProvider
+
+authenticate();
+support();-->to find authentication type;
+
+all AuthenticationProvider type will check IdentityStore the user credentials.
+
+12.
+
+UserDetailsService-->loadObjectByUserName(); and returns UserDetails object delegates the Principal to Authentication(I) instance.;
+
+
+13.
+
+user-->Request With Credentials-->AuthenticationFilter-->Authentication Object with credentials--->AuthenticationManager finds the proper AuthenticationProvider type--->AuthenticationProvider-->UserDetailsService-->returns UserDetails instance with Principal--->AuthenticationManager extracts Principal(if success or if fails to then exception) & authorities from User details-->send Authentication Object to filter--->user
+
+another filter always restores Principal data to ThreadLocal for framework and it associates with user session so thats why we donot have to authenticate each time untill session kills;
+
+
+
+
+
+
+
+
+
